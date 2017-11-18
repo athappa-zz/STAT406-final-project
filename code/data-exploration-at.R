@@ -48,6 +48,7 @@ factor.vars <- sapply(data.subset[,which(names(data.subset) %in% dummy.vars)],
 factor.vars <- as.data.frame(factor.vars)
 factor.vars <- merge(factor.vars, myfiles[,c("id", "as")], by="id")
 
+
 structure(factor.vars)
 # we still have a problem with too many NULL values
 # factor.vars[apply(factor.vars, 2, function(x) x=="")] = NA
@@ -74,10 +75,28 @@ df.clean <- test[!test$death_symptoms %in% " ", ]
 df.clean <- df.clean[!df.clean$factors_contributing_death %in% " ", ]
 df.clean <- df.clean[!df.clean$death_symptoms %in% " ", ]
 
+
+
+merge.age <- merge(x=df.clean,
+              y=myfiles[,c("id","age_of_death_above_one_year")], 
+              by = "id",
+              all.x = TRUE)
+
+merge.age <- merge.age[!merge.age$age_of_death_above_one_year %in% "NULL", ] 
+drop <- c("as.y")
+merge.age <- merge.age[ , !(names(merge.age) %in% drop)]
+names(merge.age)[names(merge.age) == 'as.x'] <- 'as'
+df.clean <- merge.age
+
 # Random subset to test
 # test <- dummy.data.frame(data.subset[sample(nrow(data.subset), 1000),], names = dummy.vars, sep = ".")
 #write.table(clean.data, file=paste(root,"clean_data/clean_data.csv", sep = ""))
 write.table(df.clean, file=paste(root,"clean_data/clean_data.txt", sep = ""), sep=",")
+
+
+# !!! remove as.y and rename
+# !!! add the response var
+
 
 #################
 ## TODO!!!
