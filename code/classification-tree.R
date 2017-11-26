@@ -148,23 +148,68 @@ shuffleData <- dat[sample(nrow(dat)), ]
 k <- 5
 folds <- cut(seq(1,nrow(shuffleData)), breaks=k, labels=FALSE)
 
-# perform 10 fold cross validation
+iter.kf <- c(100, 200, 300, 400, 500)
+depth.kf <- c(1:7)
+
+########################
+# TODO: DELETE THIS
+########################
+k <- 3
+depth.kf <- c(1:3)
+
+pred.boost.error <- matrix(rep(0, k*length(depth.kf)), nrow = k, byrow = TRUE)
+test <- matrix(rep(0, k*length(depth.kf)), nrow = k, byrow = TRUE)
+test 
+
+
+# perform k fold cross validation on tree depth
 for (i in 1:k){
   testIndices <- which(folds==i, arr.ind=TRUE)
   testData <- shuffleData[testIndices, ]
   trainData <- shuffleData[-testIndices, ]
+  
+  
+  for (j in depth.kf){
+
+    control.module <- rpart.control(maxdepth=j)
+    
+    #########################################################
+    ## TODO!!! remove the sample code that wraps trainData
+    #########################################################
+    
+    adaboost.kf <- boosting(age_of_death_above_one_year ~ .,
+                            data=trainData[sample(nrow(trainData),50),],
+                            mfinal=100,
+                            coeflearn='Breiman',
+                            control = control.module)
+    
+    adaboost.pred <- predict.boosting(adaboost.kf, 
+                                      newdata=testData[sample(nrow(testData),50),])
+    # adaboost.pred$confusion
+    pred.boost.error[i,j] <- adaboost.pred$error
+    
+  }
 }
 
 
+pred.boost.error
+pred.err <- which(pred.boost.error == min(pred.boost.error), arr.ind = TRUE)
+
+max.depth <- pred.err[2]
+max.depth
+
+# return index of lowest average column value
+min.cv.depth <- function(matrix){
+  col <- dim(matrix)[2]
+  col.mean <- apply(matrix, 2, mean)
+  # col.mean <- as.list(apply(matrix, 2, mean))
+  return (which(col.mean==min(col.mean)))
+}
+
+min.cv.depth(pred.boost.error)
 
 
 
-## pairwise chisq post hoc
-library(MASS)
-chisq.post.hoc(dat)
 
 
-
-
-varImpPlot(a.rf,n.var=19)
 
