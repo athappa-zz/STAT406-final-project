@@ -96,27 +96,3 @@ write.table(df.clean, file=paste(root,"clean_data/clean_data.txt", sep = ""), se
 
 # !!! remove as.y and rename
 # !!! add the response var
-
-
-#################
-## TODO!!!
-#################
-
-# issues with types: need to convert lots of things to numeric
-sapply(data.subset, class)
-names(data.subset)
-
-cols.num <- c("a","b")
-data.subset[cols.num] <- sapply(data.subset[cols.num],as.numeric)
-
-head(data.subset[ , sapply(data.subset, is.numeric)])
-
-# pairwise correlations among predictors
-pairs(data.subset)
-cor(data.subset)
-
-
-
-
-
-
