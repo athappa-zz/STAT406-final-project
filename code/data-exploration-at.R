@@ -28,6 +28,10 @@ keep <- c("id", "state", "rural", "sex", "date_of_death", "month_of_death",
 "chew", "smoke", "alcohol", "drinking_water_source", "is_water_filter", "toilet_used",
 "household_have_electricity","IsCoveredByHealthScheme","year","as")
 
+for (i in keep){
+  print(i)
+}
+
 data.subset <- myfiles[ , which(names(myfiles) %in% keep)]
 
 # drop vals if rural > 2

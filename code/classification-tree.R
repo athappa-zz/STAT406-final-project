@@ -5,7 +5,7 @@ getwd()
 
 library(randomForest)
 library(adabag)
-library(varImpPlot)
+# library(varImpPlot)
 library(maboost)
 
 dat <- read.table("~/STAT406-final-project/clean_data/clean_data.txt", header=T, sep=",")
@@ -33,7 +33,9 @@ sapply(dat, class)
 #                                        breaks=c(-1,33,66,99))
 
 # dat$age_of_death_above_one_year
-test <- dat
+
+
+# ??? Should we test different splits
 dat$age_of_death_above_one_year <- cut(as.numeric(dat$age_of_death_above_one_year), 
                                        breaks=c(-1,33,66,99))
 n <- nrow(dat)
@@ -124,7 +126,10 @@ mboost$confusion[1]
 # Link: https://www.rdocumentation.org/packages/adabag/versions/4.1/topics/boosting
 ##############################
 #control.module <- rpart.control(cp=-1, maxdepth=3, minsplit=0, xval=0)
-control.module <- rpart.control(maxdepth=5)
+control.module <- rpart.control(maxdepth=1)
+iter.kf <- c(100, 200, 300, 400, 500)
+
+
 adaboost <- boosting(age_of_death_above_one_year ~ .,
                      data=dat.tr[sample(nrow(dat.tr),5000),],
                      mfinal=100,
@@ -149,17 +154,19 @@ k <- 5
 folds <- cut(seq(1,nrow(shuffleData)), breaks=k, labels=FALSE)
 
 iter.kf <- c(100, 200, 300, 400, 500)
-depth.kf <- c(1:7)
+# depth.kf <- c(1:3)
 
-########################
-# TODO: DELETE THIS
-########################
-k <- 3
-depth.kf <- c(1:3)
+pred.boost.error <- matrix(rep(0, k*length(iter.kf)), nrow = k, byrow = TRUE)
+pred.boost.error
 
-pred.boost.error <- matrix(rep(0, k*length(depth.kf)), nrow = k, byrow = TRUE)
-test <- matrix(rep(0, k*length(depth.kf)), nrow = k, byrow = TRUE)
-test 
+
+
+adaboost.kf <- boosting(age_of_death_above_one_year ~ .,
+                        data = trainData,
+                        # data=trainData[sample(nrow(trainData),50),],
+                        mfinal=100,
+                        # coeflearn='Breiman',
+                        control = control.module)
 
 
 # perform k fold cross validation on tree depth
@@ -168,25 +175,29 @@ for (i in 1:k){
   testData <- shuffleData[testIndices, ]
   trainData <- shuffleData[-testIndices, ]
   
+  # hard code the depth of trees to be 1
+  control.module <- rpart.control(maxdepth=1)
   
-  for (j in depth.kf){
+  for (j in iter.kf){
 
-    control.module <- rpart.control(maxdepth=j)
+    
     
     #########################################################
     ## TODO!!! remove the sample code that wraps trainData
     #########################################################
     
     adaboost.kf <- boosting(age_of_death_above_one_year ~ .,
+                            # data = trainData,
                             data=trainData[sample(nrow(trainData),50),],
                             mfinal=100,
                             coeflearn='Breiman',
                             control = control.module)
     
-    adaboost.pred <- predict.boosting(adaboost.kf, 
-                                      newdata=testData[sample(nrow(testData),50),])
+    adaboost.pred <- predict.boosting(adaboost.kf,
+                                      newdata=testData)
+                                      #newdata=testData[sample(nrow(testData),50),])
     # adaboost.pred$confusion
-    pred.boost.error[i,j] <- adaboost.pred$error
+    # pred.boost.error[i,j] <- adaboost.pred$error
     
   }
 }
@@ -195,8 +206,8 @@ for (i in 1:k){
 pred.boost.error
 pred.err <- which(pred.boost.error == min(pred.boost.error), arr.ind = TRUE)
 
-max.depth <- pred.err[2]
-max.depth
+# max.depth <- pred.err[2]
+# max.depth
 
 # return index of lowest average column value
 min.cv.depth <- function(matrix){
