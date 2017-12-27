@@ -2,8 +2,6 @@
 
 ## TODO
 
-1. Update this readme with main results
+1. Update this readme with main results [DONE]
 
-1. Clean Code
-
-1. ...
+2. Clean Code [DONE]
